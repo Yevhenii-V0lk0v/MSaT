@@ -1,11 +1,11 @@
-package multiagent.lab1.part1.practice;
+package multiagent.lab1.practice;
 
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
-import multiagent.lab1.part1.practice.behaviour.MyCyclic;
-import multiagent.lab1.part1.practice.behaviour.MyGeneric;
-import multiagent.lab1.part1.practice.behaviour.MyOneShot;
+import multiagent.lab1.practice.behaviour.MyCyclic;
+import multiagent.lab1.practice.behaviour.MyGeneric;
+import multiagent.lab1.practice.behaviour.MyOneShot;
 
 public class MyAgent extends Agent {
 	@Override

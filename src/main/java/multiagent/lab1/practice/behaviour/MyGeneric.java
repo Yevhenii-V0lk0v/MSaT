@@ -1,4 +1,4 @@
-package multiagent.lab1.part1.practice.behaviour;
+package multiagent.lab1.practice.behaviour;
 
 import jade.core.behaviours.Behaviour;
 

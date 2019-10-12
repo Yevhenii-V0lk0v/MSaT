@@ -1,4 +1,4 @@
-package multiagent.lab1.part1.bookselling;
+package multiagent.lab1.bookselling;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
