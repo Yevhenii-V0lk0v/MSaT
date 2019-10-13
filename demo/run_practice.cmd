@@ -1,0 +1,1 @@
+start cmd /k java -cp .\* jade.Boot -gui -agents seller:multiagent.lab1.practice.MyAgent
