@@ -58,4 +58,8 @@ public final class Coordinate {
 		result = 31 * result + y;
 		return result;
 	}
+
+	public Coordinate getClone() {
+		return new Coordinate(x, y);
+	}
 }
