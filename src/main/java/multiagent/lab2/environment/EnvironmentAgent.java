@@ -18,13 +18,12 @@ import java.util.regex.Pattern;
 
 public class EnvironmentAgent extends Agent {
 	private int tick;
-	private List<Coordinate> gold;
+	private Coordinate gold;
 	private List<Coordinate> pits;
 	private Coordinate wumpus;
 
 	private AID spelunker;
 	private Coordinate spelunkerPosition;
-	private int spelunkerScore;
 
 	/**
 	 * Shows spelunkers current direction (0 - N, 1 - E, 2 - S, 3 - W)
@@ -82,20 +81,20 @@ public class EnvironmentAgent extends Agent {
 				wumpus = Coordinate.asRandom(rand, 4);
 
 				pits = new ArrayList<>();
-				gold = new ArrayList<>();
 				for (int i = 0; i < 3; i++) {
 					pits.add(Coordinate.asRandom(rand, 4));
-					Coordinate newGold;
-					do {
-						newGold = Coordinate.asRandom(rand, 4);
-					} while (pits.contains(newGold) || wumpus.equals(newGold));
-					gold.add(newGold);
+				}
+
+				while (gold == null) {
+					Coordinate newGold = Coordinate.asRandom(rand, 4);
+					if (!pits.contains(newGold) && !wumpus.equals(newGold)) {
+						gold = newGold;
+					}
 				}
 
 				do {
 					spelunkerPosition = Coordinate.asRandom(rand, 4);
 				} while (pits.contains(spelunkerPosition) || wumpus.equals(spelunkerPosition));
-				spelunkerScore = 0;
 				spelunkerRotation = 0;
 
 				tick = 0;
@@ -153,11 +152,8 @@ public class EnvironmentAgent extends Agent {
 				break;
 			}
 		}
-		for (Coordinate pile : gold) {
-			if (spelunkerPosition.equals(pile)) {
-				builder.append("bump,");
-				break;
-			}
+		if (spelunkerPosition.equals(gold)) {
+			builder.append("glitter,");
 		}
 		builder.append(tick).append(")");
 		return builder.toString();
@@ -210,13 +206,9 @@ public class EnvironmentAgent extends Agent {
 				tick++;
 				return true;
 			} else if ("Grab".equals(action)) {
-				gold.removeIf(p -> {
-					if (p.equals(spelunkerPosition)) {
-						spelunkerScore += 100;
-						return true;
-					}
-					return false;
-				});
+				if (spelunkerPosition.equals(gold)) {
+					gold = null;
+				}
 				tick++;
 				return true;
 			} else if ("Forward".equals(action)) {
