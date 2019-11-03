@@ -1,16 +1,16 @@
 package multiagent.lab2.environment;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import multiagent.lab2.spelunker.behaviour.GameCycleBehaviour;
+
+import java.util.*;
 
 public class EnvironmentState {
 	private Random gameRand;
 	private int tick;
 	private Coordinate gold;
-	private List<Coordinate> pits;
+	private Set<Coordinate> pits;
 	private Coordinate wumpus;
-	private boolean gameOver;
+	private GameplayState gameplayState;
 
 	private Coordinate spelunkerPosition;
 
@@ -21,12 +21,13 @@ public class EnvironmentState {
 	private boolean spelunkerHitAWall;
 
 	public EnvironmentState() {
+		gameplayState = new GameplayState();
 		gameRand = new Random();
 
 		wumpus = Coordinate.asRandom(gameRand, 4);
 
-		pits = new ArrayList<>();
-		for (int i = 0; i < 3; i++) {
+		pits = new HashSet<>();
+		while (pits.size() < 3) {
 			pits.add(Coordinate.asRandom(gameRand, 4));
 		}
 
@@ -46,33 +47,34 @@ public class EnvironmentState {
 	}
 
 	public String getStatePercept() {
-		StringBuilder builder = new StringBuilder("Percept(");
-		if (wumpus == null) {
-			builder.append(Percept.SCREAM.getPunctuatedInterpretation());
-		} else if (spelunkerPosition.isNextTo(wumpus)) {
-			builder.append(Percept.STENCH.getPunctuatedInterpretation());
-		} else if (spelunkerPosition.equals(wumpus)) {
-			// TODO: 02.11.2019 Add death perception
-			gameOver = true;
-		}
-		for (Coordinate pit : pits) {
-			if (spelunkerPosition.equals(pit)) {
-				// TODO: 02.11.2019 Add death perception
-				gameOver = true;
-			} else if (spelunkerPosition.isNextTo(pit)) {
-				builder.append(Percept.BREEZE.getPunctuatedInterpretation());
-				break;
+		if (!gameplayState.isGameOver()) {
+			StringBuilder builder = new StringBuilder(GameCycleBehaviour.GamePerceptType.PERCEPT.getTextFormat());
+			builder.append("(");
+			if (gameplayState.isWumpusKilled()) {
+				builder.append(Percept.SCREAM.getPunctuatedInterpretation());
+			} else if (spelunkerPosition.isNextTo(wumpus)) {
+				builder.append(Percept.STENCH.getPunctuatedInterpretation());
 			}
+			for (Coordinate pit : pits) {
+				if (spelunkerPosition.equals(pit)) {
+					gameplayState.setPlayerFell(true);
+				} else if (spelunkerPosition.isNextTo(pit)) {
+					builder.append(Percept.BREEZE.getPunctuatedInterpretation());
+					break;
+				}
+			}
+			if (spelunkerPosition.equals(gold)) {
+				builder.append(Percept.GLITTER.getPunctuatedInterpretation());
+			}
+			if (spelunkerHitAWall) {
+				builder.append(Percept.BUMP.getPunctuatedInterpretation());
+				spelunkerHitAWall = false;
+			}
+			builder.append(tick).append(")");
+			return builder.toString();
+		} else {
+			return gameplayState.getEndGamePredicate();
 		}
-		if (spelunkerPosition.equals(gold)) {
-			builder.append(Percept.GLITTER.getPunctuatedInterpretation());
-		}
-		if (spelunkerHitAWall) {
-			builder.append(Percept.BUMP.getPunctuatedInterpretation());
-			spelunkerHitAWall = false;
-		}
-		builder.append(tick).append(")");
-		return builder.toString();
 	}
 
 	public void performShot() {
@@ -86,6 +88,7 @@ public class EnvironmentState {
 					spelunkerPosition.getY() < wumpus.getY()
 			)) {
 				wumpus = null;
+				gameplayState.setWumpusKilled(true);
 			}
 		} else if (spelunkerRotation % 2 == 1 &&
 			spelunkerPosition.getY() == wumpus.getY()) {
@@ -97,25 +100,40 @@ public class EnvironmentState {
 					spelunkerPosition.getX() < wumpus.getX()
 			)) {
 				wumpus = null;
+				gameplayState.setWumpusKilled(true);
 			}
 		}
-		if (wumpus != null) {
+		if (!gameplayState.isWumpusKilled()) {
 			moveCoordinate(wumpus, gameRand.nextInt(4));
+			if (spelunkerPosition.equals(wumpus)) {
+				gameplayState.setPlayerKilled(true);
+			}
 		}
 		tick++;
 	}
 
 	private void moveCoordinate(Coordinate coordinate, int direction) {
-		if (direction % 2 == 0) {
-			int y = coordinate.getY() + direction - 1;
-			if (y >= 0 && y < 4) {
-				coordinate.setY(y);
-			}
-		} else {
-			int x = coordinate.getX() + direction - 2;
-			if (x >= 0 && x < 4) {
-				coordinate.setX(x);
-			}
+		int newX = coordinate.getX();
+		int newY = coordinate.getY();
+		switch (direction) {
+			case 0:
+				newY--;
+				break;
+			case 1:
+				newX++;
+				break;
+			case 2:
+				newY++;
+				break;
+			case 3:
+				newX--;
+				break;
+		}
+		if (newX >= 0 && newX <= 3) {
+			coordinate.setX(newX);
+		}
+		if (newY >= 0 && newY <= 3) {
+			coordinate.setY(newY);
 		}
 	}
 
@@ -135,6 +153,7 @@ public class EnvironmentState {
 	public void performGrab() {
 		if (spelunkerPosition.equals(gold)) {
 			gold = null;
+			gameplayState.setGoldTaken(true);
 		}
 		tick++;
 	}
@@ -145,20 +164,33 @@ public class EnvironmentState {
 		if (spelunkerPosition.equals(oldPosition)) {
 			spelunkerHitAWall = true;
 		}
+		if (wumpus.equals(spelunkerPosition)) {
+			gameplayState.setPlayerKilled(true);
+		}
+		for (Coordinate pit : pits) {
+			if (pit.equals(spelunkerPosition)) {
+				gameplayState.setPlayerFell(true);
+				break;
+			}
+		}
 		tick++;
 	}
 
 	public boolean isGameOver() {
-		return gameOver;
+		return gameplayState.isGameOver();
+	}
+
+	public void performClimb() {
+		gameplayState.setPlayerClimbed(true);
 	}
 
 	public enum Percept {
 		BREEZE("breeze"),
 		BUMP("bump"),
 		GLITTER("glitter"),
+		NOTHING(""),
 		SCREAM("scream"),
-		STENCH("stench"),
-		NOTHING("");
+		STENCH("stench");
 
 		Percept(String stringInterpretation) {
 			this.stringInterpretation = stringInterpretation;
@@ -189,7 +221,7 @@ public class EnvironmentState {
 		SHOOT("shoot", "Shoot"),
 		GRAB("grab", "Grab"),
 		FORWARD("forward", "Forward"),
-		TURN_LEFT("left","Turn(Left)"),
+		TURN_LEFT("left", "Turn(Left)"),
 		TURN_RIGHT("right", "Turn(Right)");
 
 		private final String natLangValue;

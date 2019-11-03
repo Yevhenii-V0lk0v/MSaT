@@ -10,23 +10,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StatePercept {
-	private static Pattern perceptPattern = Pattern.compile("Percept\\(([\\w,]+),(\\d+)\\)");
+	private static Pattern perceptPattern = Pattern.compile("Percept\\(([\\D]*)(\\d+)\\)");
 
 	private List<EnvironmentState.Percept> percepts = new ArrayList<>();
 	private int tick;
 
 	public StatePercept(String predicate) {
 		Matcher matcher = perceptPattern.matcher(predicate);
-		for (String stringPercept : matcher.group(1).split(",")) {
-			EnvironmentState.Percept percept = EnvironmentState.Percept.getByInterpretation(stringPercept);
-			if (percept != EnvironmentState.Percept.NOTHING) {
-				percepts.add(percept);
-			} else {
-				percepts.clear();
-				break;
+		if (matcher.matches()) {
+			for (String stringPercept : matcher.group(1).split(",")) {
+				EnvironmentState.Percept percept = EnvironmentState.Percept.getByInterpretation(stringPercept);
+				if (percept != EnvironmentState.Percept.NOTHING) {
+					percepts.add(percept);
+				} else {
+					percepts.clear();
+					break;
+				}
 			}
+			tick = Integer.parseInt(matcher.group(2));
 		}
-		tick = Integer.parseInt(matcher.group(2));
 	}
 
 	public boolean isStench() {

@@ -8,7 +8,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import multiagent.lab2.ActionUtils;
+import multiagent.lab2.BehaviourUtils;
 import multiagent.lab2.ProcessDependentBehaviour;
 
 import java.util.regex.Matcher;
@@ -36,8 +36,6 @@ public class EnvironmentAgent extends Agent {
 		}
 
 		addBehaviour(new GameInitBehaviour());
-		addBehaviour(new StateProviderBehaviour());
-		addBehaviour(new StateEditorBehaviour());
 	}
 
 	@Override
@@ -58,20 +56,22 @@ public class EnvironmentAgent extends Agent {
 
 		@Override
 		public void action() {
-			ACLMessage gameReq = getAgent().receive(requestTemplate);
-			if (gameReq != null) {
+			BehaviourUtils.receiveMessage(this, requestTemplate, m -> {
 				System.out.println("Request for a game arrived.");
-				spelunker = gameReq.getSender();
+				spelunker = m.getSender();
 				gameState = new EnvironmentState();
-				ACLMessage ok = gameReq.createReply();
+
+				getAgent().addBehaviour(new StateProviderBehaviour());
+				getAgent().addBehaviour(new StateEditorBehaviour());
+
+				ACLMessage ok = m.createReply();
 				ok.setPerformative(ACLMessage.CONFIRM);
 				ok.setContent("OK");
 				getAgent().send(ok);
 
 				done = true;
-			} else {
-				block();
-			}
+			});
+
 		}
 	}
 
@@ -86,15 +86,15 @@ public class EnvironmentAgent extends Agent {
 
 		@Override
 		public void action() {
-			ACLMessage req = getAgent().receive(mt);
-			if (req != null) {
-				ACLMessage resp = req.createReply();
+			BehaviourUtils.receiveMessage(this, mt, m -> {
+				ACLMessage resp = m.createReply();
 				resp.setPerformative(ACLMessage.INFORM);
 				resp.setContent(gameState.getStatePercept());
 				getAgent().send(resp);
-			} else {
-				block();
-			}
+				if (gameState.isGameOver()) {
+					getAgent().doDelete();
+				}
+			});
 		}
 	}
 
@@ -106,7 +106,7 @@ public class EnvironmentAgent extends Agent {
 
 		@Override
 		public void action() {
-			ActionUtils.receiveMessage(this, mt, m -> {
+			BehaviourUtils.receiveMessage(this, mt, m -> {
 				ACLMessage actionReply = m.createReply();
 				if (processAction(m.getContent())) {
 					actionReply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -130,6 +130,7 @@ public class EnvironmentAgent extends Agent {
 				switch (actionObject) {
 					case CLIMB:
 						// TODO: 02.11.2019 Add finishing behaviour
+						gameState.performClimb();
 						return true;
 					case SHOOT:
 						gameState.performShot();

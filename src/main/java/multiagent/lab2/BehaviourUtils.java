@@ -6,7 +6,7 @@ import jade.lang.acl.MessageTemplate;
 
 import java.util.function.Consumer;
 
-public class ActionUtils {
+public class BehaviourUtils {
 
 	/**
 	 * A method, that encompasses basic stages of receiving a message of some template

@@ -36,6 +36,9 @@ public final class Coordinate {
 	}
 
 	public boolean isNextTo(Coordinate c) {
+		if (c == null) {
+			return false;
+		}
 		int xd = Math.abs(c.x - x);
 		int yd = Math.abs(c.y - y);
 		return (xd == 1 && yd == 0) || (xd == 0 && yd == 1);
@@ -61,5 +64,13 @@ public final class Coordinate {
 
 	public Coordinate getClone() {
 		return new Coordinate(x, y);
+	}
+
+	@Override
+	public String toString() {
+		return "{" +
+			"x=" + x +
+			", y=" + y +
+			'}';
 	}
 }
