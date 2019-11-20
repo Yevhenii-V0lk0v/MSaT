@@ -2,19 +2,51 @@ package multiagent.lab2.navigator.guess;
 
 import multiagent.lab2.environment.Coordinate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RoomGuess {
 	private Coordinate position;
 	private Map<Integer, RoomGuess> neighbouringRooms = new HashMap<>();
 
+	private int distanceToGoal;
+
+	private boolean visited;
 	private boolean empty;
 	private boolean breeze;
 	private boolean stench;
 
 	public RoomGuess(int x, int y) {
 		position = new Coordinate(x, y);
+	}
+
+	public void propagateDistance() {
+		neighbouringRooms.values().forEach(n -> {
+			if (n.isSafe()) {
+				if (n.distanceToGoal < 0) {
+					n.distanceToGoal = distanceToGoal + 1;
+					n.propagateDistance();
+				} else if (n.distanceToGoal > distanceToGoal) {
+					n.distanceToGoal = distanceToGoal + 1;
+				}
+			}
+		});
+	}
+
+	public List<RoomGuess> getRouteToRoom(RoomGuess goalRoom) {
+		List<RoomGuess> route = new ArrayList<>();
+		route.add(this);
+		if (neighbouringRooms.containsValue(goalRoom)) {
+			route.add(goalRoom);
+		} else {
+			neighbouringRooms.values().stream()
+				.filter(n -> n.distanceToGoal > 0 && n.distanceToGoal < distanceToGoal)
+				.findFirst()
+				.ifPresent(nextRoom -> route.addAll(nextRoom.getRouteToRoom(goalRoom)));
+		}
+		return route;
 	}
 
 	public boolean isUnknown() {
@@ -55,10 +87,6 @@ public class RoomGuess {
 		neighbouringRooms.put(3, neighbour);
 	}
 
-	public void setNeighbouringRooms(Map<Integer, RoomGuess> neighbouringRooms) {
-		this.neighbouringRooms = neighbouringRooms;
-	}
-
 	public boolean isEmpty() {
 		return empty;
 	}
@@ -88,5 +116,25 @@ public class RoomGuess {
 			empty = false;
 		}
 		this.stench = stench;
+	}
+
+	public boolean isSafe() {
+		return empty || !(breeze || stench);
+	}
+
+	public int getDistanceToGoal() {
+		return distanceToGoal;
+	}
+
+	public void setDistanceToGoal(int distanceToGoal) {
+		this.distanceToGoal = distanceToGoal;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
+
+	public void setVisited(boolean visited) {
+		this.visited = visited;
 	}
 }

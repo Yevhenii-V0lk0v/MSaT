@@ -1,10 +1,24 @@
 package multiagent.lab2.navigator.navigation;
 
-public class PathFinder {
-	/* TODO: 19.11.2019 here we need logic for pathfinding. Simple enough
-	First, create a matrix of wrappers, where each has distance to goal
-	 Based on the distances create a route from the current player position to the goal
+import multiagent.lab2.environment.Coordinate;
+import multiagent.lab2.navigator.guess.CaveGuess;
+import multiagent.lab2.navigator.guess.RoomGuess;
 
-	 After that, move player based on the set route (should be performed in a separate class)
-	 */
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PathFinder {
+
+	public static List<RoomGuess> buildRoute(Coordinate from, Coordinate to, CaveGuess cave) {
+		RoomGuess goalRoom = cave.getGuessAt(to);
+		RoomGuess startingRoom = cave.getGuessAt(from);
+		if (startingRoom != null && goalRoom != null) {
+			cave.getAllRooms().forEach(g -> g.setDistanceToGoal(-1));
+			goalRoom.setDistanceToGoal(0);
+			goalRoom.propagateDistance();
+			return startingRoom.getRouteToRoom(goalRoom);
+		}
+		return new ArrayList<>();
+	}
 }

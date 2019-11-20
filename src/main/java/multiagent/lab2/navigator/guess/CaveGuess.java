@@ -38,6 +38,10 @@ public class CaveGuess {
 		});
 	}
 
+	public List<RoomGuess> getAllRooms() {
+		return new ArrayList<>(roomGuesses);
+	}
+
 	public List<RoomGuess> getUnknownRooms() {
 		return roomGuesses.stream()
 			.filter(RoomGuess::isUnknown)
