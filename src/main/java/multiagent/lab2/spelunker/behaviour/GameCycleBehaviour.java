@@ -4,9 +4,10 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import multiagent.lab2.BehaviourUtils;
+import multiagent.lab2.GameAction;
 import multiagent.lab2.ProcessDependentBehaviour;
 import multiagent.lab2.environment.EnvironmentState;
-import multiagent.lab2.spelunker.NaturalLanguageUtils;
+import multiagent.lab2.NaturalLanguageUtils;
 import multiagent.lab2.spelunker.StatePercept;
 
 import static multiagent.lab2.spelunker.behaviour.GameCycleBehaviour.GameCycleState.*;
@@ -89,7 +90,7 @@ public class GameCycleBehaviour extends ProcessDependentBehaviour {
 
 	private void passControlCommand() {
 		BehaviourUtils.receiveMessage(this, mt, m -> {
-			EnvironmentState.GameAction parsedAction = NaturalLanguageUtils.transformPhraseIntoAction(m.getContent());
+			GameAction parsedAction = NaturalLanguageUtils.transformPhraseIntoAction(m.getContent());
 			if (parsedAction != null) {
 				ACLMessage actMessage = new ACLMessage(ACLMessage.PROPOSE);
 				actMessage.addReceiver(environment);

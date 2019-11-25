@@ -24,12 +24,10 @@ public class RoomGuess {
 
 	public void propagateDistance() {
 		neighbouringRooms.values().forEach(n -> {
-			if (n.isSafe()) {
-				if (n.distanceToGoal < 0) {
+			if (n != null && n.isSafe()) {
+				if (n.distanceToGoal < 0 || n.distanceToGoal > distanceToGoal) {
 					n.distanceToGoal = distanceToGoal + 1;
 					n.propagateDistance();
-				} else if (n.distanceToGoal > distanceToGoal) {
-					n.distanceToGoal = distanceToGoal + 1;
 				}
 			}
 		});
@@ -42,7 +40,7 @@ public class RoomGuess {
 			route.add(goalRoom);
 		} else {
 			neighbouringRooms.values().stream()
-				.filter(n -> n.distanceToGoal > 0 && n.distanceToGoal < distanceToGoal)
+				.filter(n -> n != null && n.distanceToGoal > 0 && n.distanceToGoal < distanceToGoal)
 				.findFirst()
 				.ifPresent(nextRoom -> route.addAll(nextRoom.getRouteToRoom(goalRoom)));
 		}
@@ -72,18 +70,30 @@ public class RoomGuess {
 	}
 
 	public void setNorthernNeighbour(RoomGuess neighbour) {
+		if (neighbour == null) {
+			neighbouringRooms.remove(0);
+		}
 		neighbouringRooms.put(0, neighbour);
 	}
 
 	public void setEasternNeighbour(RoomGuess neighbour) {
+		if (neighbour == null) {
+			neighbouringRooms.remove(1);
+		}
 		neighbouringRooms.put(1, neighbour);
 	}
 
 	public void setSouthernNeighbour(RoomGuess neighbour) {
+		if (neighbour == null) {
+			neighbouringRooms.remove(2);
+		}
 		neighbouringRooms.put(2, neighbour);
 	}
 
 	public void setWesternNeighbour(RoomGuess neighbour) {
+		if (neighbour == null) {
+			neighbouringRooms.remove(3);
+		}
 		neighbouringRooms.put(3, neighbour);
 	}
 
@@ -104,18 +114,17 @@ public class RoomGuess {
 	}
 
 	public void setBreeze(boolean breeze) {
-		this.breeze = breeze;
+		this.breeze = !(empty || visited) && breeze;
 	}
 
 	public boolean isStench() {
-		return stench;
+		return !visited && stench;
 	}
 
 	public void setStench(boolean stench) {
-		if (stench) {
-			empty = false;
+		if (!empty) {
+			this.stench = stench;
 		}
-		this.stench = stench;
 	}
 
 	public boolean isSafe() {
@@ -136,5 +145,17 @@ public class RoomGuess {
 
 	public void setVisited(boolean visited) {
 		this.visited = visited;
+		if (visited) {
+			breeze = false;
+			stench = false;
+		}
+	}
+
+	public int getDirectionTo(RoomGuess roomGuess) {
+		return neighbouringRooms.entrySet().stream()
+			.filter(e -> e.getValue() != null && e.getValue().equals(roomGuess))
+			.findFirst()
+			.map(Map.Entry::getKey)
+			.orElse(-1);
 	}
 }

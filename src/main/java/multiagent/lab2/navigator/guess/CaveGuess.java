@@ -54,6 +54,10 @@ public class CaveGuess {
 			.collect(Collectors.toList());
 	}
 
+	public RoomGuess getCurrentRoom() {
+		return getRoomAt(currentPosition);
+	}
+
 	public void cutTopGuesses(Coordinate topBorder, boolean cutBottom) {
 		roomGuesses.removeIf(g -> g.getPosition().getY() < topBorder.getY());
 		roomGuesses.forEach(g -> {
@@ -114,7 +118,7 @@ public class CaveGuess {
 		}
 	}
 
-	public RoomGuess getGuessAt(Coordinate coordinate) {
+	public RoomGuess getRoomAt(Coordinate coordinate) {
 		return roomGuesses.stream().filter(g -> g.getPosition().equals(coordinate)).findFirst().orElse(null);
 	}
 
@@ -128,5 +132,67 @@ public class CaveGuess {
 
 	public void setCurrentDirection(int currentDirection) {
 		this.currentDirection = currentDirection;
+	}
+
+	public List<RoomGuess> getBreezyRooms() {
+		return roomGuesses.stream()
+			.filter(RoomGuess::isBreeze)
+			.collect(Collectors.toList());
+	}
+
+	public List<RoomGuess> getStinkyRooms() {
+		return roomGuesses.stream()
+			.filter(RoomGuess::isStench)
+			.collect(Collectors.toList());
+	}
+
+	@Override
+	public String toString() {
+		roomGuesses.sort((a, b) -> {
+			if (a.getPosition().getY() > b.getPosition().getY()) {
+				return 1;
+			} else if (a.getPosition().getY() < b.getPosition().getY()) {
+				return -1;
+			} else {
+				if (a.getPosition().getX() > b.getPosition().getX()) {
+					return 1;
+				} else if (a.getPosition().getX() < b.getPosition().getX()) {
+					return -1;
+				}
+				return 0;
+			}
+		});
+		int maxX = roomGuesses.stream().mapToInt(g -> g.getPosition().getX()).max().orElse(7);
+		int maxY = roomGuesses.stream().mapToInt(g -> g.getPosition().getY()).max().orElse(7);
+		StringBuilder builder = new StringBuilder(currentPosition.toString()).append("(").append(currentDirection).append(")\n");
+		for (int i = 0; i <= maxY; i++) {
+			for (int j = 0; j <= maxX; j++) {
+				if (currentPosition.equals(new Coordinate(j, i))) {
+					builder.append("*--");
+				} else {
+					builder.append("+--");
+				}
+			}
+			builder.append("+\n");
+			for (int j = 0; j <= maxX; j++) {
+				RoomGuess room = getRoomAt(new Coordinate(j, i));
+				builder.append("|");
+				builder.append(room.isVisited()? "V" :" ");
+				builder.append(room.isEmpty()? "E" :" ");
+			}
+			builder.append("|\n");
+			for (int j = 0; j <= maxX; j++) {
+				RoomGuess room = getRoomAt(new Coordinate(j, i));
+				builder.append("|");
+				builder.append(room.isBreeze()? "B" :" ");
+				builder.append(room.isStench()? "S" :" ");
+			}
+			builder.append("|\n");
+		}
+		for (int j = 0; j <= maxX; j++) {
+			builder.append("+--");
+		}
+		builder.append("+\n");
+		return builder.toString();
 	}
 }

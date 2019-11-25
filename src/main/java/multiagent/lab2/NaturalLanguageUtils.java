@@ -1,7 +1,8 @@
-package multiagent.lab2.spelunker;
+package multiagent.lab2;
 
-import multiagent.lab2.environment.EnvironmentState;
+import multiagent.lab2.spelunker.StatePercept;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,15 +10,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NaturalLanguageUtils {
-	private static final Map<EnvironmentState.Percept, String> perceptPhrases = new HashMap<>();
+	private static final Map<Percept, String> perceptPhrases = new HashMap<>();
 
 	static {
-		perceptPhrases.put(EnvironmentState.Percept.BREEZE, "a slight breeze is flowing in the air");
-		perceptPhrases.put(EnvironmentState.Percept.BUMP, "you bump into a solid wall");
-		perceptPhrases.put(EnvironmentState.Percept.GLITTER, "a dim glitter is under your feet");
-		perceptPhrases.put(EnvironmentState.Percept.NOTHING, "the pitch black of the dungeon surrounds you");
-		perceptPhrases.put(EnvironmentState.Percept.SCREAM, "you hear an echoing scream");
-		perceptPhrases.put(EnvironmentState.Percept.STENCH, "you smell a horrible stench");
+		perceptPhrases.put(Percept.BREEZE, "a slight breeze is flowing in the air");
+		perceptPhrases.put(Percept.BUMP, "you bump into a solid wall");
+		perceptPhrases.put(Percept.GLITTER, "a dim glitter is under your feet");
+		perceptPhrases.put(Percept.NOTHING, "the pitch black of the dungeon surrounds you");
+		perceptPhrases.put(Percept.SCREAM, "you hear an echoing scream");
+		perceptPhrases.put(Percept.STENCH, "you smell a horrible stench");
 	}
 
 	private static final Map<String, String> winPhrases = new HashMap<>();
@@ -38,9 +39,9 @@ public class NaturalLanguageUtils {
 	public static String transformPerceptToNaturalLanguage(StatePercept percept) {
 		StringBuilder nlTextBuilder = new StringBuilder("Current tick is ");
 		nlTextBuilder.append(percept.getTick());
-		List<EnvironmentState.Percept> percepts = percept.getPercepts();
+		List<Percept> percepts = percept.getPercepts();
 		if (percepts.isEmpty()) {
-			nlTextBuilder.append("\nand ").append(perceptPhrases.get(EnvironmentState.Percept.NOTHING));
+			nlTextBuilder.append("\nand ").append(perceptPhrases.get(Percept.NOTHING));
 		} else {
 			percepts.forEach(p -> nlTextBuilder.append("\nand ").append(perceptPhrases.get(p)));
 		}
@@ -71,12 +72,23 @@ public class NaturalLanguageUtils {
 		}
 	}
 
-	public static EnvironmentState.GameAction transformPhraseIntoAction(String phrase) {
-		for (EnvironmentState.GameAction value : EnvironmentState.GameAction.values()) {
+	public static GameAction transformPhraseIntoAction(String phrase) {
+		for (GameAction value : GameAction.values()) {
 			if (phrase.toLowerCase().contains(value.getNatLangValue().toLowerCase())) {
 				return value;
 			}
 		}
 		return null;
+	}
+
+	public static List<Percept> perceiveStateFromNatLang(String natLangState) {
+		List<Percept> result = new ArrayList<>();
+		natLangState = natLangState.toLowerCase();
+		for (Percept percept : Percept.values()) {
+			if (percept != Percept.NOTHING && natLangState.contains(percept.getStringInterpretation())) {
+				result.add(percept);
+			}
+		}
+		return result;
 	}
 }

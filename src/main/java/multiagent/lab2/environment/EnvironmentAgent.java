@@ -9,6 +9,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import multiagent.lab2.BehaviourUtils;
+import multiagent.lab2.GameAction;
 import multiagent.lab2.ProcessDependentBehaviour;
 
 import java.util.regex.Matcher;
@@ -125,7 +126,7 @@ public class EnvironmentAgent extends Agent {
 	private boolean processAction(String actionPredicate) {
 		Matcher actionMatcher = actionPattern.matcher(actionPredicate);
 		if (actionMatcher.matches()) {
-			EnvironmentState.GameAction actionObject = EnvironmentState.GameAction.getByPredicateValue(actionMatcher.group(1));
+			GameAction actionObject = GameAction.getByPredicateValue(actionMatcher.group(1));
 			if (actionObject != null) {
 				switch (actionObject) {
 					case CLIMB:

@@ -1,26 +1,24 @@
 package multiagent.lab2.spelunker;
 
-import multiagent.lab2.environment.EnvironmentState;
+import multiagent.lab2.Percept;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StatePercept {
 	private static Pattern perceptPattern = Pattern.compile("Percept\\(([\\D]*)(\\d+)\\)");
 
-	private List<EnvironmentState.Percept> percepts = new ArrayList<>();
+	private List<Percept> percepts = new ArrayList<>();
 	private int tick;
 
 	public StatePercept(String predicate) {
 		Matcher matcher = perceptPattern.matcher(predicate);
 		if (matcher.matches()) {
 			for (String stringPercept : matcher.group(1).split(",")) {
-				EnvironmentState.Percept percept = EnvironmentState.Percept.getByInterpretation(stringPercept);
-				if (percept != EnvironmentState.Percept.NOTHING) {
+				Percept percept = Percept.getByInterpretation(stringPercept);
+				if (percept != Percept.NOTHING) {
 					percepts.add(percept);
 				} else {
 					percepts.clear();
@@ -32,23 +30,23 @@ public class StatePercept {
 	}
 
 	public boolean isStench() {
-		return percepts.contains(EnvironmentState.Percept.STENCH);
+		return percepts.contains(Percept.STENCH);
 	}
 
 	public boolean isGlitter() {
-		return percepts.contains(EnvironmentState.Percept.GLITTER);
+		return percepts.contains(Percept.GLITTER);
 	}
 
 	public boolean isBreeze() {
-		return percepts.contains(EnvironmentState.Percept.BREEZE);
+		return percepts.contains(Percept.BREEZE);
 	}
 
 	public boolean isBump() {
-		return percepts.contains(EnvironmentState.Percept.BUMP);
+		return percepts.contains(Percept.BUMP);
 	}
 
 	public boolean isScream() {
-		return percepts.contains(EnvironmentState.Percept.SCREAM);
+		return percepts.contains(Percept.SCREAM);
 	}
 
 	public int getTick() {
@@ -59,7 +57,7 @@ public class StatePercept {
 		this.tick = tick;
 	}
 
-	public List<EnvironmentState.Percept> getPercepts() {
+	public List<Percept> getPercepts() {
 		return new ArrayList<>(percepts);
 	}
 }

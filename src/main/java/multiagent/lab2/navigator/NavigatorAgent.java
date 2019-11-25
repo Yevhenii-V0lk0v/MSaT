@@ -10,11 +10,14 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import multiagent.lab2.BehaviourUtils;
 import multiagent.lab2.ProcessDependentBehaviour;
+import multiagent.lab2.navigator.behaviour.WumpusBot;
 
 import java.util.Scanner;
 
 public class NavigatorAgent extends Agent {
+	private boolean pc = true;
 	private AID spelunker;
+	private WumpusBot bot;
 
 	@Override
 	protected void setup() {
@@ -47,6 +50,7 @@ public class NavigatorAgent extends Agent {
 			BehaviourUtils.receiveMessage(this, requestTemplate, m -> {
 				System.out.println("Request for navigation arrived.");
 				spelunker = m.getSender();
+				bot = new WumpusBot();
 				getAgent().addBehaviour(new NavigationBehaviour());
 				ACLMessage ok = m.createReply();
 				ok.setPerformative(ACLMessage.CONFIRM);
@@ -71,12 +75,19 @@ public class NavigatorAgent extends Agent {
 			BehaviourUtils.receiveMessage(this, reqTemplate, m -> {
 				System.out.println(m.getContent());
 				if (m.getContent().contains("Current tick")) {
-					System.out.println("Your move?");
-					ACLMessage reply = m.createReply();
-					reply.setPerformative(ACLMessage.PROPOSE);
-					String command = console.nextLine();
-					reply.setContent(command);
-					getAgent().send(reply);
+					if (!pc) {
+						System.out.println("Your move?");
+						ACLMessage reply = m.createReply();
+						reply.setPerformative(ACLMessage.PROPOSE);
+						String command = console.nextLine();
+						reply.setContent(command);
+						getAgent().send(reply);
+					} else {
+						ACLMessage reply = m.createReply();
+						reply.setPerformative(ACLMessage.PROPOSE);
+						reply.setContent(bot.getCommand(m.getContent()));
+						getAgent().send(reply);
+					}
 				} else {
 					getAgent().doDelete();
 				}
