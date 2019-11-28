@@ -97,10 +97,10 @@ public class EnvironmentState {
 			spelunkerPosition.getY() == wumpus.getY()) {
 			if ((
 				spelunkerRotation == 1 &&
-					spelunkerPosition.getX() > wumpus.getX()
+					spelunkerPosition.getX() < wumpus.getX()
 			) || (
 				spelunkerRotation == 3 &&
-					spelunkerPosition.getX() < wumpus.getX()
+					spelunkerPosition.getX() > wumpus.getX()
 			)) {
 				wumpus = null;
 				gameplayState.setWumpusKilled(true);
@@ -167,7 +167,7 @@ public class EnvironmentState {
 		if (spelunkerPosition.equals(oldPosition)) {
 			spelunkerHitAWall = true;
 		}
-		if (wumpus.equals(spelunkerPosition)) {
+		if (spelunkerPosition.equals(wumpus)) {
 			gameplayState.setPlayerKilled(true);
 		}
 		for (Coordinate pit : pits) {
@@ -185,5 +185,40 @@ public class EnvironmentState {
 
 	public void performClimb() {
 		gameplayState.setPlayerClimbed(true);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder("Actual map:\n");
+		builder.append(spelunkerPosition.toString()).append("(").append(spelunkerRotation).append(")\n");
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				if (spelunkerPosition.equals(new Coordinate(j, i))) {
+					builder.append("*-");
+				} else {
+					builder.append("+-");
+				}
+			}
+			builder.append("+\n");
+			for (int j = 0; j < 4; j++) {
+				Coordinate c = new Coordinate(j, i);
+				builder.append("|");
+				if (c.equals(wumpus) && pits.contains(c)) {
+					builder.append("B");
+				} else if (c.equals(wumpus)) {
+					builder.append("W");
+				} else if (pits.contains(c)) {
+					builder.append("P");
+				} else {
+					builder.append(" ");
+				}
+			}
+			builder.append("|\n");
+		}
+		for (int i = 0; i < 4; i++) {
+			builder.append("+-");
+		}
+		builder.append("+\n");
+		return builder.toString();
 	}
 }

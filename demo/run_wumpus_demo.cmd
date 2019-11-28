@@ -1,0 +1,1 @@
+start cmd /k java -cp .\* jade.Boot -gui -agents board:multiagent.lab2.environment.EnvironmentAgent(false);spel:multiagent.lab2.spelunker.SpelunkerAgent;nav:multiagent.lab2.navigator.NavigatorAgent(false,true)

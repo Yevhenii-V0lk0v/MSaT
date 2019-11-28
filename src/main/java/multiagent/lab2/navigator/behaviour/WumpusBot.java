@@ -18,14 +18,21 @@ import java.util.Objects;
 import static multiagent.lab2.Percept.*;
 
 public class WumpusBot {
+	private boolean loggingEnabled;
 	private CaveGuess cave = new CaveGuess();
 	private Goal goal;
 	private GameplayState gameplayState = new GameplayState();
 
+	public WumpusBot(boolean logging) {
+		loggingEnabled = logging;
+	}
+
 	public String getCommand(String content) {
 		List<Percept> percepts = NaturalLanguageUtils.perceiveStateFromNatLang(content);
 		parsePercepts(percepts);
-		System.out.println(cave);
+		if (loggingEnabled) {
+			System.out.println(cave);
+		}
 		return chooseAction(percepts);
 	}
 
@@ -33,11 +40,15 @@ public class WumpusBot {
 	private String chooseAction(List<Percept> percepts) {
 		if (percepts.contains(GLITTER)) {
 			gameplayState.setGoldTaken(true);
-			System.out.println("Grabbing gold");
+			if (loggingEnabled) {
+				System.out.println("Grabbing gold");
+			}
 			return GameAction.GRAB.getNatLangValue();
 		}
-		if (gameplayState.isGoldTaken() && gameplayState.isWumpusKilled()) {
-			System.out.println("Leaving the dungeon");
+		if (gameplayState.isGoldTaken() || gameplayState.isWumpusKilled()) {
+			if (loggingEnabled) {
+				System.out.println("Leaving the dungeon");
+			}
 			return GameAction.CLIMB.getNatLangValue();
 		}
 		if (goal == null || goal.isGoalReached()) {
@@ -47,37 +58,26 @@ public class WumpusBot {
 	}
 
 	private void setupGoal() {
+		// TODO: 26.11.2019 Add logic for breaking for encirclement of danger
 		if (cave.getUnknownRooms().size() > 0 && cave.getUnknownRooms().stream().anyMatch(r -> PathFinder.isRoomReachable(r, cave.getCurrentPosition(), cave))) {
+			if (loggingEnabled) {
+				System.out.println("Exploring unknown rooms");
+			}
 			goal = new ExploreUnknown(cave);
 		} else if (cave.getBreezyRooms().size() > 3 || cave.getStinkyRooms().size() > 1) {
+			if (loggingEnabled) {
+				System.out.println("Exploring danger");
+			}
 			goal = new ExploreDanger(cave);
 		} else if (cave.getStinkyRooms().size() == 1) {
+			if (loggingEnabled) {
+				System.out.println("Hunting for Wumpus");
+			}
 			goal = new HuntWumpus(cave);
 		}
 	}
 
 	private void parsePercepts(List<Percept> percepts) {
-		RoomGuess currentRoom = cave.getCurrentRoom();
-		currentRoom.setVisited(true);
-		currentRoom.setEmpty(true);
-		if (percepts.contains(SCREAM)) {
-			gameplayState.setWumpusKilled(true);
-			cave.getStinkyRooms().forEach(r -> r.setStench(false));
-		}
-		if (percepts.contains(STENCH)) {
-			currentRoom.getNeighbouringRooms().values().forEach(r -> {
-				if (r != null && !r.isVisited()) {
-					r.setStench(true);
-				}
-			});
-		}
-		if (percepts.contains(BREEZE)) {
-			currentRoom.getNeighbouringRooms().values().forEach(r -> {
-				if (r != null && !r.isVisited()) {
-					r.setBreeze(true);
-				}
-			});
-		}
 		if (percepts.contains(BUMP)) {
 			switch (cave.getCurrentDirection()) {
 				case 0:
@@ -98,7 +98,40 @@ public class WumpusBot {
 					break;
 			}
 		}
-		if (percepts.isEmpty()) {
+		RoomGuess currentRoom = cave.getCurrentRoom();
+		currentRoom.setVisited(true);
+		currentRoom.setEmpty(true);
+		if (percepts.contains(SCREAM)) {
+			gameplayState.setWumpusKilled(true);
+			cave.getStinkyRooms().forEach(r -> r.setStench(false));
+		}
+		if (percepts.contains(STENCH)) {
+			currentRoom.getNeighbouringRooms().values().forEach(r -> {
+				if (r != null && !r.isVisited()) {
+					r.setStench(true);
+				}
+			});
+		} else {
+			currentRoom.getNeighbouringRooms().values().forEach(r -> {
+				if (r != null && r.isStench()) {
+					r.setStench(false);
+				}
+			});
+		}
+		if (percepts.contains(BREEZE)) {
+			currentRoom.getNeighbouringRooms().values().forEach(r -> {
+				if (r != null && !r.isVisited()) {
+					r.setBreeze(true);
+				}
+			});
+		} else {
+			currentRoom.getNeighbouringRooms().values().forEach(r -> {
+				if (r != null && r.isBreeze()) {
+					r.setBreeze(false);
+				}
+			});
+		}
+		if (!percepts.contains(BREEZE) && !percepts.contains(STENCH)) {
 			currentRoom.getNeighbouringRooms().values().stream().filter(Objects::nonNull).forEach(r -> r.setEmpty(true));
 		}
 	}

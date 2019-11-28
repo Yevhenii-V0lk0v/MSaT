@@ -22,8 +22,8 @@ public abstract class Goal {
 
 	protected String moveToGoal() {
 		List<RoomGuess> route = PathFinder.buildRoute(cave.getCurrentPosition(), destination, cave);
-		route.remove(0);
-		if (!route.isEmpty()) {
+		if (route.size() > 1) {
+			route.remove(0);
 			int directionToNextPoint = cave.getCurrentRoom().getDirectionTo(route.get(0));
 			if (directionToNextPoint >= 0) {
 				int dirDiff = cave.getCurrentDirection() - directionToNextPoint;
@@ -38,8 +38,9 @@ public abstract class Goal {
 				}
 			}
 		}
-		System.out.println("The bot is stuck in danger. Performing a leap of faith");
-		return GameAction.FORWARD.getNatLangValue();
+		destination = null;
+		System.out.println("The bot is stuck. Resetting the goal");
+		return "";
 	}
 
 	protected String getTurnCommand(int dirDiff) {

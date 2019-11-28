@@ -113,7 +113,7 @@ public class CaveGuess {
 		});
 		if (cutLeft) {
 			Coordinate leftBorder = rightBorder.getClone();
-			leftBorder.setY(leftBorder.getX() - 3);
+			leftBorder.setX(leftBorder.getX() - 3);
 			cutLeftGuesses(leftBorder, false);
 		}
 	}
@@ -164,7 +164,8 @@ public class CaveGuess {
 		});
 		int maxX = roomGuesses.stream().mapToInt(g -> g.getPosition().getX()).max().orElse(7);
 		int maxY = roomGuesses.stream().mapToInt(g -> g.getPosition().getY()).max().orElse(7);
-		StringBuilder builder = new StringBuilder(currentPosition.toString()).append("(").append(currentDirection).append(")\n");
+		StringBuilder builder = new StringBuilder("Current guess:\n");
+		builder.append(currentPosition.toString()).append("(").append(currentDirection).append(")\n");
 		for (int i = 0; i <= maxY; i++) {
 			for (int j = 0; j <= maxX; j++) {
 				if (currentPosition.equals(new Coordinate(j, i))) {

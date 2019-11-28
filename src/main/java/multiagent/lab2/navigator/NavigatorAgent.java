@@ -15,12 +15,24 @@ import multiagent.lab2.navigator.behaviour.WumpusBot;
 import java.util.Scanner;
 
 public class NavigatorAgent extends Agent {
-	private boolean pc = true;
+	private boolean pc;
+	private boolean logGuess;
 	private AID spelunker;
 	private WumpusBot bot;
 
 	@Override
 	protected void setup() {
+		Object[] arguments = getArguments();
+		if (arguments != null) {
+			if (arguments.length >= 1) {
+				pc = Boolean.parseBoolean(arguments[0].toString());
+			}
+			if (arguments.length == 2) {
+				logGuess = Boolean.parseBoolean(arguments[1].toString());
+			}
+		}
+		bot = new WumpusBot(logGuess);
+
 		DFAgentDescription description = new DFAgentDescription();
 		description.setName(this.getAID());
 
@@ -50,7 +62,6 @@ public class NavigatorAgent extends Agent {
 			BehaviourUtils.receiveMessage(this, requestTemplate, m -> {
 				System.out.println("Request for navigation arrived.");
 				spelunker = m.getSender();
-				bot = new WumpusBot();
 				getAgent().addBehaviour(new NavigationBehaviour());
 				ACLMessage ok = m.createReply();
 				ok.setPerformative(ACLMessage.CONFIRM);

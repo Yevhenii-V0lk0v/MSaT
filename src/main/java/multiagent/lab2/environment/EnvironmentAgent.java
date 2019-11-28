@@ -16,11 +16,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EnvironmentAgent extends Agent {
+	private boolean logMap;
 	private EnvironmentState gameState;
 	private AID spelunker;
 
 	@Override
 	protected void setup() {
+		if (getArguments() != null && getArguments().length > 0) {
+			logMap = Boolean.parseBoolean(getArguments()[0].toString());
+		}
+
 		DFAgentDescription description = new DFAgentDescription();
 		description.setName(this.getAID());
 
@@ -90,6 +95,9 @@ public class EnvironmentAgent extends Agent {
 			BehaviourUtils.receiveMessage(this, mt, m -> {
 				ACLMessage resp = m.createReply();
 				resp.setPerformative(ACLMessage.INFORM);
+				if (logMap) {
+					System.out.println(gameState);
+				}
 				resp.setContent(gameState.getStatePercept());
 				getAgent().send(resp);
 				if (gameState.isGameOver()) {
@@ -130,7 +138,6 @@ public class EnvironmentAgent extends Agent {
 			if (actionObject != null) {
 				switch (actionObject) {
 					case CLIMB:
-						// TODO: 02.11.2019 Add finishing behaviour
 						gameState.performClimb();
 						return true;
 					case SHOOT:
